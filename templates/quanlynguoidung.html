@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Danh Sách Người Dùng</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+            text-align: center;
+        }
+
+        h2 {
+            color: #333;
+        }
+
+        table {
+            width: 80%;
+            margin: 20px auto;
+            border-collapse: collapse;
+            background: #fff;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        th, td {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+            text-align: left;
+        }
+
+        th {
+            background-color: #007bff;
+            color: white;
+        }
+
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+
+        select, button {
+            padding: 5px;
+            margin-left: 10px;
+        }
+    </style>
+    <script>
+        async function fetchUsers() {
+            const token = localStorage.getItem("token");
+            console.log("Token từ localStorage:", token); // Debug token
+
+            if (!token) {
+                alert("Bạn chưa đăng nhập!");
+                return;
+            }
+
+            try {
+                const response = await fetch("/auth/users", {
+                    headers: { "Authorization": `Bearer ${token}` }
+                });
+
+                if (!response.ok) throw new Error("Không thể lấy danh sách người dùng");
+
+                const users = await response.json();
+                const userTable = document.getElementById("userTable");
+                userTable.innerHTML = "";
+
+                users.forEach(user => {
+                    const row = `<tr>
+                        <td>${user.username}</td>
+                        <td>${user.email}</td>
+                        <td>
+                            <select id="level-${user.email}">
+                                <option value="user" ${user.level === "user" ? "selected" : ""}>User</option>
+                                <option value="admin" ${user.level === "admin" ? "selected" : ""}>Admin</option>
+                            </select>
+                            <button onclick="changeUserLevel('${user.email}')">Thay đổi</button>
+                        </td>
+                    </tr>`;
+                    userTable.innerHTML += row;
+                });
+            } catch (error) {
+                console.error("Lỗi:", error);
+            }
+        }
+
+        async function changeUserLevel(email) {
+            const newLevel = document.getElementById(`level-${email}`).value;
+            const token = localStorage.getItem("token");
+
+            console.log(`Gửi yêu cầu đổi level: ${email} -> ${newLevel}`);
+
+            if (!token) {
+                alert("Bạn cần đăng nhập với quyền admin!");
+                return;
+            }
+
+            try {
+                const response = await fetch("/auth/change-level", {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ email, level: newLevel })
+                });
+
+                const result = await response.json();
+                console.log("Kết quả cập nhật:", result);
+
+                if (response.ok) {
+                    alert(`Cập nhật thành công: ${result.message}`);
+                    fetchUsers();
+                } else {
+                    alert(`Lỗi: ${result.message}`);
+                }
+            } catch (error) {
+                console.error("Lỗi:", error);
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", fetchUsers);
+    </script>
+</head>
+<body>
+    <h2>Danh Sách Người Dùng</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Tên người dùng</th>
+                <th>Email</th>
+                <th>Vai trò</th>
+            </tr>
+        </thead>
+        <tbody id="userTable"></tbody>
+    </table>
+</body>
+</html>

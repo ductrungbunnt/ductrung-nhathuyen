@@ -1,0 +1,422 @@
+  <!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Thư Viện Văn Học</title>
+    <link rel="icon" type="image/x-icon" href="../static/images/favicon.png">
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "Arial", sans-serif;
+      }
+
+      body {
+        background-image: url("/static/images/bg.jpg");
+        background-size: cover;
+        background-position: center;
+        background-attachment: fixed;
+        text-align: center;
+        color: white;
+      }
+
+      /* HEADER */
+      header {
+        background: #66bb6a;
+        padding: 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+      }
+
+      header h1 {
+        font-size: 28px;
+        margin-left: 20px;
+      }
+
+      nav {
+        margin-right: 20px;
+        position: relative;
+      }
+
+      nav button {
+        background-color: white;
+        color: #4caf50;
+        border: none;
+        padding: 12px 18px;
+        cursor: pointer;
+        margin-left: 12px;
+        font-size: 16px;
+        border-radius: 20px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+        transition: all 0.3s ease;
+      }
+
+      nav button:hover {
+        background-color: #45a049;
+        color: white;
+        transform: scale(1.05);
+      }
+
+      #user-info {
+        font-size: 18px;
+        font-weight: bold;
+        margin-left: 12px;
+        color: white;
+        cursor: pointer;
+      }
+
+      #security-details p,
+      #security-details span {
+        word-break: break-all;
+      }
+
+      /* DROPDOWN */
+      .dropdown {
+        position: absolute;
+        top: 40px;
+        right: 0;
+        background: white;
+        width: 200px;
+        border-radius: 8px;
+        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+        display: none;
+        flex-direction: column;
+        text-align: left;
+      }
+
+      .dropdown a {
+        padding: 10px;
+        display: block;
+        color: black;
+        text-decoration: none;
+        font-size: 16px;
+        border-bottom: 1px solid #ddd;
+      }
+
+      .dropdown a:last-child {
+        border-bottom: none;
+      }
+
+      .dropdown a:hover {
+        background: #f0f0f0;
+      }
+
+      /* CONTAINER */
+      .container {
+        margin: 50px auto;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        max-width: 1000px;
+      }
+
+      .card {
+        background: white;
+        padding: 20px;
+        margin: 15px;
+        border-radius: 12px;
+        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+        width: 250px;
+        text-align: center;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+      }
+
+      .card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+      }
+
+      .card a {
+        text-decoration: none;
+        color: #4caf50;
+        font-weight: bold;
+        font-size: 18px;
+        transition: color 0.3s ease;
+      }
+
+      .card a:hover {
+        color: #a82c79;
+      }
+
+      /* FOOTER */
+      footer {
+        background: rgba(0, 0, 0, 0.8);
+        padding: 15px;
+        margin-top: 50px;
+        font-size: 14px;
+      }
+
+      p.description {
+        color: black;
+        font-size: 18px;
+        margin-top: 30px;
+      }
+
+      #call-button {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background-color: #4caf50;
+        color: white;
+        font-size: 28px;
+        padding: 10px 14px;
+        border-radius: 50%;
+        text-decoration: none;
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+        transition: transform 0.3s ease, background-color 0.3s ease;
+        z-index: 999;
+      }
+
+      #call-button:hover {
+        background-color: #388e3c;
+        transform: scale(1.1);
+      }
+
+      #dropdown-menu {
+        position: absolute;
+        top: 40px;
+        right: 0;
+        background: white;
+        width: 250px;
+        border-radius: 8px;
+        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+        display: none;
+        flex-direction: column;
+        text-align: left;
+        z-index: 1000;
+      }
+
+      #dropdown-menu a {
+        padding: 12px 15px;
+        display: block;
+        color: black;
+        text-decoration: none;
+        font-size: 16px;
+        border-bottom: 1px solid #ddd;
+        transition: background-color 0.3s;
+      }
+
+      #dropdown-menu a:last-child {
+        border-bottom: none;
+      }
+
+      #dropdown-menu a:hover {
+        background: #f0f0f0;
+      }
+
+      #security-details {
+        background-color: white;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        margin: 5px 10px;
+        padding: 10px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      }
+
+      #security-details p {
+        margin: 8px 0;
+        padding: 5px 10px;
+        font-size: 14px;
+      }
+
+      #security-details .btn {
+        width: 100%;
+        margin-top: 10px;
+        padding: 8px;
+        font-size: 14px;
+      }
+
+      #user-info {
+        cursor: pointer;
+        padding: 8px 15px;
+        border-radius: 20px;
+        transition: background-color 0.3s;
+      }
+
+      #user-info:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+      }
+    </style>
+  </head>
+
+  <body>
+    <header>
+      <h1>📖 Thư Viện Văn Học</h1>
+      <nav id="nav-buttons">
+        <button onclick="window.location.href='/login'">Đăng Nhập</button>
+        <button onclick="window.location.href='/signup'">Đăng Ký</button>
+      </nav>
+    </header>
+
+    <p class="description">
+      📚 Trang web cung cấp kiến thức văn học và giúp bạn phát triển kỹ năng
+      viết.
+    </p>
+
+    <div class="container">
+      <div class="card"><a href="/lib">📖 Thư viện kiến thức</a></div>
+      <div class="card"><a href="/forum">💬 Diễn đàn thảo luận</a></div>
+      <div class="card" id="minigame-card">
+        <a href="/minigame">🎮 Minigame</a>
+        <span
+          id="maintenance-text"
+          style="display: none; color: red; font-size: 14px; margin-top: 5px"
+          >(Bảo trì)</span
+        >
+      </div>
+      <div class="card"><a href="/chatbot">🤖 Chatbot AI chấm bài</a></div>
+      <a href="tel:0899009018" id="call-button" title="Gọi ngay">
+        <img src="/static/images/phone_icon.png" alt="Gọi ngay" width="46" />
+      </a>
+    </div>
+
+    <div class="dropdown" id="dropdown-menu">
+      <a href="#" onclick="toggleSecurity(event)">🔒 Bảo mật ▼</a>
+      <div id="security-details" style="display: none; padding-left: 10px; color: black;">
+        <p>👤 Tên: <span id="username-display"></span></p>
+        <p>🔑 Mật khẩu: <span id="password-field">******</span> 
+          <span onclick="togglePassword()" style="cursor: pointer;">👁️</span>
+        </p>
+        <a href="/change-password" class="btn btn-sm btn-primary mt-2">
+          <i class="fas fa-key me-1"></i>Đổi mật khẩu
+        </a>
+
+      <a href="#" onclick="logout()">🚪 Đăng Xuất</a>
+    </div>
+  </body>
+</html>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    fetch("/minigame/config", {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        console.log("Dữ liệu cấu hình ngày mở:", data);
+        const openDays = data.open_days;
+        window.openDays = openDays;
+
+        const checkboxes = document.querySelectorAll(
+          ".days-list input[type='checkbox']"
+        );
+        if (checkboxes.length > 0) {
+          checkboxes.forEach((checkbox) => {
+            const day = parseInt(checkbox.value);
+            checkbox.checked = openDays.includes(day);
+          });
+        }
+
+        const today = new Date().getDay();
+        if (!openDays.includes(today)) {
+          document.getElementById("maintenance-text").style.display = "block";
+          const minigameLink = document.querySelector("#minigame-card a");
+          if (minigameLink) {
+            minigameLink.style.pointerEvents = "none";
+            minigameLink.style.color = "gray";
+          }
+        }
+      })
+      .catch((error) => {
+        console.error("Lỗi tải cấu hình ngày mở:", error);
+      });
+let user = JSON.parse(localStorage.getItem("user")); // Lấy user từ localStorage
+let navButtons = document.getElementById("nav-buttons");
+
+if (user) {
+    let username = user.username; // Lấy username từ object
+    let userLevel = user.level;   // Lấy cấp bậc user
+
+    // <p>🔑 Mật khẩu: <span id="password-field">******</span> 
+    //                     <span onclick="togglePassword()" style="cursor: pointer;">👁️</span>
+    //                  </p>
+    navButtons.innerHTML = `
+        <span id="user-info" onclick="toggleDropdown()">👋 Xin chào, ${username} ▼</span>
+        <div class="dropdown" id="dropdown-menu">
+            <a href="#" onclick="toggleSecurity(event)">🔒 Bảo mật ▼</a>
+            <div id="security-details" style="display: none; padding-left: 10px; color: black;">
+                <p>👤 Tên: ${username}</p>
+                <p>📛 Cấp bậc: ${userLevel}</p> <!-- Hiển thị quyền -->
+            </div>
+            <a href="/change-password" class="btn btn-sm btn-primary mt-2">
+                <i class="fas fa-key me-1"></i> Đổi mật khẩu
+            </a>
+            <div>${userLevel === 'admin' ? '<a href="/admin" class="btn btn-sm btn-warning mt-2">🔧 Quản trị viên</a>' : ''} </div>
+            <a href="#" onclick="logout()">🚪 Đăng Xuất</a>
+        </div>
+    `;
+}
+  });
+
+  function toggleDropdown() {
+    let dropdown = document.getElementById("dropdown-menu");
+    dropdown.style.display =
+      dropdown.style.display === "flex" ? "none" : "flex";
+  }
+
+  function toggleSecurity(event) {
+    event.preventDefault();
+    const details = document.getElementById('security-details');
+    const username = localStorage.getItem('username') || 'Chưa đăng nhập';
+    document.getElementById('username-display').textContent = username;
+    
+    if (details.style.display === 'none') {
+        details.style.display = 'block';
+    } else {
+        details.style.display = 'none';
+    }
+  }
+
+// Khi trang web load, lấy mật khẩu từ localStorage và hiển thị
+document.addEventListener("DOMContentLoaded", function() {
+    const password = localStorage.getItem('password'); // Lấy mật khẩu từ localStorage
+    if (password) {
+        document.getElementById('password-field').innerText = '******'; // Hiển thị mật khẩu ẩn ban đầu
+    } else {
+        document.getElementById('password-field').innerText = 'Không có mật khẩu';
+    }
+});
+
+function togglePassword() {
+    const passwordField = document.getElementById('password-field');
+    const currentText = passwordField.innerText;
+    
+    // Nếu mật khẩu đang bị ẩn (hiển thị "******"), ta sẽ cho hiển thị mật khẩu thật
+    const password = JSON.parse(localStorage.getItem('password')); // Lấy mật khẩu từ localStorage
+    
+    if (currentText === '******' && password) {
+        passwordField.innerText = password; // Hiển thị mật khẩu thật
+    } else {
+        passwordField.innerText = '******'; // Ẩn mật khẩu khi click lần nữa
+    }
+}
+
+  document.addEventListener("click", function (event) {
+    let dropdown = document.getElementById("dropdown-menu");
+    let userInfo = document.getElementById("user-info");
+    if (dropdown && userInfo) {
+      if (
+        !userInfo.contains(event.target) &&
+        !dropdown.contains(event.target)
+      ) {
+        dropdown.style.display = "none";
+      }
+    }
+  });
+
+  function logout() {
+    localStorage.removeItem('username');
+    localStorage.removeItem('password');
+    localStorage.removeItem('user');
+    localStorage.removeItem('token');
+    localStorage.removeItem('user_id');
+    localStorage.removeItem('level');
+
+    window.location.href = '/login';
+  }
+</script>

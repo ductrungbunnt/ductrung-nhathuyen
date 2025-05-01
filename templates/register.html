@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+
+{% block title %}Đăng ký - Văn học thời đại số{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-6 col-md-8">
+            <div class="card shadow-lg">
+                <div class="card-header bg-dark text-white text-center py-3">
+                    <h2 class="mb-0"><i class="fas fa-user-plus me-2"></i>Đăng ký tài khoản asdasdas</h2>
+                </div>
+                <div class="card-body">
+                    <form id="registerForm" onsubmit="return handleRegister(event)">
+                        <div class="mb-3">
+                            <label for="fullname" class="form-label">Họ và tên</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-user"></i></span>
+                                <input type="text" class="form-control" id="fullname" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="username" class="form-label">Tên đăng nhập</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-at"></i></span>
+                                <input type="text" class="form-control" id="username" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                                <input type="email" class="form-control" id="email" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Mật khẩu</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                                <input type="password" class="form-control" id="password" required>
+                                <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('password')">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="confirmPassword" class="form-label">Xác nhận mật khẩu</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                                <input type="password" class="form-control" id="confirmPassword" required>
+                                <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('confirmPassword')">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-user-plus me-2"></i>Đăng ký
+                            </button>
+                            <a href="/login" class="btn btn-secondary">
+                                <i class="fas fa-sign-in-alt me-2"></i>Đã có tài khoản? Đăng nhập
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function togglePasswordVisibility(inputId) {
+    const input = document.getElementById(inputId);
+    const button = input.nextElementSibling;
+    const icon = button.querySelector('i');
+    
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+    } else {
+        input.type = 'password';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+    }
+}
+async function handleRegister(event) {
+    event.preventDefault();
+    
+    const fullname = document.getElementById('fullname').value;
+    const username = document.getElementById('username').value;
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+    
+    // Kiểm tra mật khẩu
+    if (password !== confirmPassword) {
+        showNotification('Mật khẩu xác nhận không khớp!', 'error');
+        return false;
+    }
+    
+    // Kiểm tra độ dài mật khẩu
+    if (password.length < 6) {
+        showNotification('Mật khẩu phải có ít nhất 6 ký tự!', 'error');
+        return false;
+    }
+    
+    try {
+        const response = await fetch('/register', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                fullname,
+                username,
+                email,
+                password
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showNotification('Đăng ký thành công!', 'success');
+            setTimeout(() => {
+                window.location.href = '/login';  // Điều hướng đến trang login sau khi đăng ký
+            }, 1500);
+        } else {
+            showNotification(data.message || 'Đăng ký thất bại', 'error');
+        }
+    } catch (error) {
+        console.error('Lỗi khi đăng ký:', error);
+        showNotification('Có lỗi xảy ra khi đăng ký', 'error');
+    }
+    
+    return false;
+}
+
+
+function createNotificationArea() {
+    const notificationArea = document.createElement('div');
+    notificationArea.id = 'notification-area';
+    notificationArea.className = 'notification-area';
+    document.body.appendChild(notificationArea);
+    return notificationArea;
+}
+</script>
+
+<style>
+.notification-area {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 9999;
+    max-width: 300px;
+}
+
+.notification {
+    margin-bottom: 10px;
+    transform: translateX(100%);
+    opacity: 0;
+    transition: all 0.3s ease;
+}
+
+.notification.show {
+    transform: translateX(0);
+    opacity: 1;
+}
+
+.card {
+    border: none;
+    border-radius: 10px;
+}
+
+.card-header {
+    border-radius: 10px 10px 0 0 !important;
+}
+
+.form-control:focus {
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.btn-outline-secondary:hover {
+    background-color: #6c757d;
+    color: white;
+}
+</style>
+{% endblock %} 

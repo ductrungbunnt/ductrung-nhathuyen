@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thư viện văn mẫu & Lý thuyết</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- DataTables CSS -->
+    <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            padding: 20px;
+        }
+        #library {
+            max-width: 1200px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        }
+        .dataTables_wrapper {
+            margin-top: 20px;
+        }
+        .btn-action {
+            margin-right: 5px;
+        }
+        dialog::backdrop {
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+        dialog {
+            border: none;
+            border-radius: 10px;
+            padding: 0;
+            max-width: 90%;
+            width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .modal-content {
+            border-radius: 10px;
+        }
+        .form-label {
+            font-weight: 500;
+        }
+        .loading-spinner {
+            display: none;
+            text-align: center;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    {% include "base.html" %}
+    <section id="library">
+        <h2 class="text-center mb-4">Thư viện văn mẫu & Lý thuyết</h2>
+
+        <!-- Navigation Tabs -->
+        <nav>
+            <div class="nav nav-tabs" id="nav-tab" role="tablist">
+                <button class="nav-link active" id="nav-vanmau-tab" data-bs-toggle="tab" data-bs-target="#nav-vanmau" type="button" role="tab" aria-controls="nav-vanmau" aria-selected="true">Thư viện văn mẫu</button>
+                <button class="nav-link" id="nav-lythuyet-tab" data-bs-toggle="tab" data-bs-target="#nav-lythuyet" type="button" role="tab" aria-controls="nav-lythuyet" aria-selected="false">Lý thuyết</button>
+            </div>
+        </nav>
+
+        <!-- Tab Content -->
+        <div class="tab-content" id="nav-tabContent">
+            <!-- Tab 1: Thư viện văn mẫu -->
+            <div class="tab-pane fade show active" id="nav-vanmau" role="tabpanel" aria-labelledby="nav-vanmau-tab">
+                <!-- Nút thêm tài liệu cho admin -->
+                <div class="admin-actions mt-3 mb-3" style="display: none;">
+                    <button class="btn btn-primary" onclick="openAddDocumentDialog('vanmau')">+ Thêm văn mẫu mới</button>
+                </div>
+                <table id="vanmau-table" class="table table-striped table-bordered" style="width:100%">
+                    <thead>
+                        <tr>
+                            <th>Tiêu đề</th>
+                            <th>Tác giả</th>
+                            <th>Lớp</th>
+                            <th>Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Data will be populated here dynamically -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Tab 2: Lý thuyết -->
+            <div class="tab-pane fade" id="nav-lythuyet" role="tabpanel" aria-labelledby="nav-lythuyet-tab">
+                <!-- Nút thêm tài liệu cho admin -->
+                <div class="admin-actions mt-3 mb-3" style="display: none;">
+                    <button class="btn btn-primary" onclick="openAddDocumentDialog('lythuyet')">+ Thêm lý thuyết mới</button>
+                </div>
+                <table id="lythuyet-table" class="table table-striped table-bordered" style="width:100%">
+                    <thead>
+                        <tr>
+                            <th>Tiêu đề</th>
+                            <th>Tác giả</th>
+                            <th>Lớp</th>
+                            <th>Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Data will be populated here dynamically -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- Dialog for Adding/Editing Documents -->
+    <dialog id="add-document-dialog" class="dialog modal-dialog-scrollable">
+        <div class="modal-content p-4">
+            <div class="modal-header">
+                <h3 id="dialog-title" class="modal-title">Thêm tài liệu mới</h3>
+                <button type="button" class="btn-close" onclick="closeAddDocumentDialog()" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="document-form">
+                    <input type="hidden" id="doc-id">
+                    
+                    <div class="mb-3">
+                        <label for="doc-title" class="form-label">
+                            <i class="bi bi-file-earmark-text"></i> Tiêu đề
+                        </label>
+                        <input type="text" id="doc-title" class="form-control" placeholder="Nhập tiêu đề tài liệu" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="doc-content" class="form-label">
+                            <i class="bi bi-textarea-t"></i> Nội dung
+                        </label>
+                        <textarea id="doc-content" class="form-control" rows="5" placeholder="Nhập nội dung tài liệu" required></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="doc-files" class="form-label">
+                            <i class="bi bi-upload"></i> Tải lên tệp
+                        </label>
+                        <input type="file" id="doc-files" class="form-control" multiple>
+                        <div class="form-text">Có thể chọn nhiều tệp cùng lúc</div>
+                        <div id="file-list-container" class="mt-2"></div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="doc-category" class="form-label">
+                                <i class="bi bi-tag"></i> Danh mục
+                            </label>
+                            <select id="doc-category" class="form-select" required>
+                                <option value="vanmau">Văn mẫu</option>
+                                <option value="lythuyet">Lý thuyết</option>
+                            </select>
+                            <div class="form-text">Chọn đúng danh mục để phân loại tài liệu</div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="doc-grade" class="form-label">
+                                <i class="bi bi-mortarboard"></i> Lớp
+                            </label>
+                            <input type="text" id="doc-grade" class="form-control" placeholder="Vd: 10, 11, 12, Đại học" required>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="doc-author" class="form-label">
+                            <i class="bi bi-person"></i> Tác giả
+                        </label>
+                        <input type="text" id="doc-author" class="form-control" placeholder="Tên tác giả" required>
+                    </div>
+                    
+                    <div id="loading-spinner" class="loading-spinner">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Đang lưu...</span>
+                        </div>
+                        <p class="mt-2">Đang xử lý, vui lòng đợi...</p>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeAddDocumentDialog()">
+                    <i class="bi bi-x-circle"></i> Hủy
+                </button>
+                <button class="btn btn-success" onclick="saveDocument()">
+                    <i class="bi bi-save"></i> Lưu tài liệu
+                </button>
+            </div>
+        </div>
+    </dialog>
+
+    <!-- Bootstrap 5 JS and Popper.js -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <!-- DataTables JS -->
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    
+    <script>
+        let vanmauTable, lythuyetTable;
+        let currentTab = 'vanmau';
+
+        document.addEventListener("DOMContentLoaded", function () {
+            checkAdminAccess();
+            initializeTables();
+            fetchDataForTables();
+            
+            // Theo dõi sự kiện chuyển tab
+            document.getElementById('nav-vanmau-tab').addEventListener('click', function() {
+                currentTab = 'vanmau';
+            });
+            
+            document.getElementById('nav-lythuyet-tab').addEventListener('click', function() {
+                currentTab = 'lythuyet';
+            });
+        });
+
+        function checkAdminAccess() {
+            const level = localStorage.getItem("level");
+            const user = JSON.parse(localStorage.getItem('user'));
+            const isAdmin = user && (user.level === "admin" || level === "admin");
+            
+            // Hiển thị các nút thêm tài liệu nếu là admin
+            const adminActionButtons = document.querySelectorAll('.admin-actions');
+            adminActionButtons.forEach(button => {
+                button.style.display = isAdmin ? 'block' : 'none';
+            });
+        }
+
+        function initializeTables() {
+            vanmauTable = $('#vanmau-table').DataTable({
+                language: {
+                    url: "https://cdn.datatables.net/plug-ins/1.13.6/i18n/vi.json"
+                },
+                columns: [
+                    { data: 'title' },
+                    { data: 'author' },
+                    { data: 'grade' },
+                    {
+                        data: null,
+                        render: function (data, type, row) {
+                            return `
+                                <button class="btn btn-info btn-action" onclick="viewDocument('${row._id}')">📖 Xem</button>
+                                ${isAdmin() ? `
+                                    <button class="btn btn-warning btn-action" onclick="editDocument('${row._id}')">✏️ Sửa</button>
+                                    <button class="btn btn-danger btn-action" onclick="deleteDocument('${row._id}')">🗑 Xóa</button>
+                                ` : ''}
+                            `;
+                        }
+                    }
+                ]
+            });
+
+            lythuyetTable = $('#lythuyet-table').DataTable({
+                language: {
+                    url: "https://cdn.datatables.net/plug-ins/1.13.6/i18n/vi.json"
+                },
+                columns: [
+                    { data: 'title' },
+                    { data: 'author' },
+                    { data: 'grade' },
+                    {
+                        data: null,
+                        render: function (data, type, row) {
+                            return `
+                                <button class="btn btn-info btn-action" onclick="viewDocument('${row._id}')">📖 Xem</button>
+                                ${isAdmin() ? `
+                                    <button class="btn btn-warning btn-action" onclick="editDocument('${row._id}')">✏️ Sửa</button>
+                                    <button class="btn btn-danger btn-action" onclick="deleteDocument('${row._id}')">🗑 Xóa</button>
+                                ` : ''}
+                            `;
+                        }
+                    }
+                ]
+            });
+        }
+
+        async function fetchDataForTables() {
+            try {
+                const response = await fetch("/api/fetch-document");
+                const data = await response.json();
+
+                // Phân loại dữ liệu dựa trên category
+                const vanmauData = data.filter(doc => doc.category.toLowerCase() === 'vanmau');
+                const lythuyetData = data.filter(doc => doc.category.toLowerCase() === 'lythuyet');
+
+                vanmauTable.clear().rows.add(vanmauData).draw();
+                lythuyetTable.clear().rows.add(lythuyetData).draw();
+            } catch (error) {
+                console.error("Lỗi tải dữ liệu:", error);
+            }
+        }
+
+        function isAdmin() {
+            const user = JSON.parse(localStorage.getItem('user'));
+            return user && user.level === "admin";
+        }
+
+        function viewDocument(id) {
+            window.location.href = `/view-library/${id}`;
+        }
+
+        function editDocument(id) {
+            const token = localStorage.getItem("token");
+            const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
+            fetch(`/api/document/${id}`, {
+                method: "GET",
+                headers: headers,
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const post = data.document;
+                        document.getElementById("dialog-title").textContent = "Chỉnh sửa tài liệu";
+                        document.getElementById("doc-id").value = post._id;
+                        document.getElementById("doc-title").value = post.title;
+                        document.getElementById("doc-content").value = post.content;
+                        
+                        // Thiết lập category từ dữ liệu
+                        const categorySelect = document.getElementById("doc-category");
+                        for (let i = 0; i < categorySelect.options.length; i++) {
+                            if (categorySelect.options[i].value === post.category) {
+                                categorySelect.selectedIndex = i;
+                                break;
+                            }
+                        }
+                        
+                        document.getElementById("doc-grade").value = post.grade;
+                        document.getElementById("doc-author").value = post.author;
+                        document.getElementById("doc-files").value = "";
+
+                        // Hiển thị danh sách tệp tin đã tải lên (nếu có)
+                        const fileListContainer = document.getElementById("file-list-container");
+                        fileListContainer.innerHTML = "";
+                        
+                        if (post.files && post.files.length > 0) {
+                            const fileListHTML = `
+                                <div class="mt-3">
+                                    <h6>Tệp đã tải lên:</h6>
+                                    <ul class="list-group">
+                                        ${post.files.map(file => `<li class="list-group-item">${file}</li>`).join('')}
+                                    </ul>
+                                </div>
+                            `;
+                            fileListContainer.innerHTML = fileListHTML;
+                        }
+
+                        document.getElementById("add-document-dialog").showModal();
+                    } else {
+                        alert("Có lỗi xảy ra khi tải tài liệu.");
+                    }
+                })
+                .catch(error => {
+                    console.error("Lỗi khi tải tài liệu:", error);
+                });
+        }
+
+        function deleteDocument(id) {
+            if (!confirm("Bạn có chắc chắn muốn xóa tài liệu này?")) return;
+
+            const token = localStorage.getItem("token");
+            const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
+            fetch(`/api/delete-document/${id}`, {
+                method: "DELETE",
+                headers: headers,
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert("Tài liệu đã xóa thành công.");
+                        fetchDataForTables(); // Refresh the table
+                    } else {
+                        alert("Có lỗi xảy ra khi xóa tài liệu.");
+                    }
+                })
+                .catch(error => {
+                    console.error("Lỗi khi xóa tài liệu:", error);
+                });
+        }
+
+        function openAddDocumentDialog(tab) {
+            const user = localStorage.getItem("user");
+            if (!user) {
+                alert("Bạn cần đăng nhập để truy cập thư viện.");
+                window.location.href = "/login";
+            } else {
+                document.getElementById("dialog-title").textContent = "Thêm tài liệu mới";
+                document.getElementById("doc-id").value = "";
+                document.getElementById("doc-title").value = "";
+                document.getElementById("doc-content").value = "";
+                
+                // Thiết lập category dựa trên tab hiện tại
+                const categorySelect = document.getElementById("doc-category");
+                for (let i = 0; i < categorySelect.options.length; i++) {
+                    if (categorySelect.options[i].value === tab) {
+                        categorySelect.selectedIndex = i;
+                        break;
+                    }
+                }
+                
+                document.getElementById("doc-grade").value = "";
+                document.getElementById("doc-author").value = "";
+                document.getElementById("doc-files").value = "";
+
+                // Xóa danh sách tệp cũ (nếu có)
+                document.getElementById("file-list-container").innerHTML = "";
+                
+                document.getElementById("add-document-dialog").showModal();
+            }
+        }
+
+        function closeAddDocumentDialog() {
+            document.getElementById("add-document-dialog").close();
+        }
+
+        function saveDocument() {
+            // Thu thập dữ liệu từ form
+            const docId = document.getElementById('doc-id').value;
+            const title = document.getElementById('doc-title').value;
+            const content = document.getElementById('doc-content').value;
+            const category = document.getElementById('doc-category').value;
+            const grade = document.getElementById('doc-grade').value;
+            const author = document.getElementById('doc-author').value;
+            const files = document.getElementById('doc-files').files;
+
+            // Xác thực dữ liệu
+            if (!title || !content || !category || !grade || !author) {
+                alert("Vui lòng điền đầy đủ thông tin bắt buộc.");
+                return;
+            }
+
+            // Hiện loading spinner
+            document.getElementById('loading-spinner').style.display = 'block';
+
+            // Chuẩn bị dữ liệu
+            const formData = new FormData();
+            formData.append('title', title);
+            formData.append('content', content);
+            formData.append('category', category);
+            formData.append('grade', grade);
+            formData.append('author', author);
+
+            // Thêm các tệp vào formData
+            for (let i = 0; i < files.length; i++) {
+                formData.append('files', files[i]);
+            }
+
+            // Lấy token từ localStorage
+            const token = localStorage.getItem('token');
+            const headers = {};
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+
+            // Xác định API endpoint (thêm mới hoặc cập nhật)
+            let url = '/api/add-document';
+            let method = 'POST';
+
+            if (docId) {
+                url = `/api/update-document/${docId}`;
+                method = 'PUT';
+            }
+
+            // Gửi yêu cầu đến server
+            fetch(url, {
+                method: method,
+                headers: headers,
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Ẩn loading spinner
+                document.getElementById('loading-spinner').style.display = 'none';
+
+                if (data.success) {
+                    alert(docId ? "Tài liệu đã được cập nhật thành công!" : "Tài liệu đã được thêm thành công!");
+                    closeAddDocumentDialog();
+                    fetchDataForTables(); // Cập nhật lại bảng dữ liệu
+                } else {
+                    alert("Có lỗi xảy ra: " + (data.message || data.error || "Không thể lưu tài liệu"));
+                }
+            })
+            .catch(error => {
+                // Ẩn loading spinner
+                document.getElementById('loading-spinner').style.display = 'none';
+                console.error("Lỗi khi lưu tài liệu:", error);
+                alert("Có lỗi xảy ra khi kết nối đến server. Vui lòng thử lại sau.");
+            });
+        }
+    </script>
+</body>
+</html>

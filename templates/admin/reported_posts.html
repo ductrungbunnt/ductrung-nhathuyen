@@ -1,0 +1,670 @@
+{% extends "base.html" %}
+
+{% block title %}Quản lý bài viết bị báo cáo - Văn học thời đại số{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-lg-3">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title mb-4">
+                        <i class="fas fa-user-shield me-2"></i>Quản trị hệ thống
+                    </h5>
+                    <div class="list-group list-group-flush">
+                        <a href="/admin" class="list-group-item list-group-item-action">
+                            <i class="fas fa-tachometer-alt me-2"></i> Tổng quan
+                        </a>
+                        <a href="/admin/forum" class="list-group-item list-group-item-action">
+                            <i class="fas fa-comments me-2"></i> Quản lý diễn đàn
+                        </a>
+                        <a href="/admin/users" class="list-group-item list-group-item-action">
+                            <i class="fas fa-users me-2"></i> Quản lý người dùng
+                        </a>
+                        <a href="/admin/reportPost" class="list-group-item list-group-item-action active">
+                            <i class="fas fa-flag me-2"></i> Quản lý báo cáo bài viết
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-lg-9">
+            <!-- Thống kê báo cáo -->
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <div class="card bg-gradient-danger text-white shadow-sm">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="card-title mb-0">Tổng số báo cáo</h6>
+                                    <h2 class="mt-2 mb-0" id="total-reports">0</h2>
+                                </div>
+                                <div class="icon-box">
+                                    <i class="fas fa-flag fa-2x"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card bg-gradient-warning text-white shadow-sm">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="card-title mb-0">Báo cáo mới</h6>
+                                    <h2 class="mt-2 mb-0" id="new-reports">0</h2>
+                                </div>
+                                <div class="icon-box">
+                                    <i class="fas fa-exclamation-triangle fa-2x"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card bg-gradient-success text-white shadow-sm">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="card-title mb-0">Đã xử lý</h6>
+                                    <h2 class="mt-2 mb-0" id="processed-reports">0</h2>
+                                </div>
+                                <div class="icon-box">
+                                    <i class="fas fa-check-circle fa-2x"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Danh sách bài viết bị báo cáo -->
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-flag me-2"></i>Danh sách bài viết bị báo cáo
+                        </h5>
+                        <div class="d-flex gap-2">
+                            <div class="input-group">
+                                <span class="input-group-text bg-light">
+                                    <i class="fas fa-search"></i>
+                                </span>
+                                <input type="text" class="form-control" id="searchInput" placeholder="Tìm kiếm...">
+                            </div>
+                            <select class="form-select" id="statusFilter" style="width: auto;">
+                                <option value="">Tất cả trạng thái</option>
+                                <option value="pending">Chưa xử lý</option>
+                                <option value="processed">Đã xử lý</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Tiêu đề</th>
+                                    <th>Nội dung</th>
+                                    <th>Tác giả</th>
+                                    <th>Ngày báo cáo</th>
+                                    <th>Lượt thích</th>
+                                    <th>Trạng thái</th>
+                                    <th>Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="reportsTableBody">
+                                <!-- Reported posts will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Phân trang -->
+                    <nav aria-label="Page navigation" class="mt-4">
+                        <ul class="pagination justify-content-center" id="pagination">
+                            <!-- Pagination will be loaded here -->
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal xem chi tiết bài viết -->
+<div class="modal fade" id="viewPostModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-file-alt me-2"></i>Chi tiết bài viết bị báo cáo
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <h5 id="post-title"></h5>
+                    <div class="d-flex align-items-center mb-2">
+                        <span class="badge bg-primary me-2">Tác giả: <span id="post-author"></span></span>
+                        <span class="badge bg-secondary me-2">Ngày đăng: <span id="post-date"></span></span>
+                        <span class="badge bg-info"><i class="fas fa-heart me-1"></i><span id="post-likes"></span></span>
+                    </div>
+                    <div class="card">
+                        <div class="card-body">
+                            <p id="post-content"></p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <h6><i class="fas fa-comments me-2"></i>Bình luận (<span id="comments-count">0</span>)</h6>
+                    <div id="post-comments" class="mt-2">
+                        <!-- Comments will be loaded here -->
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                <button type="button" class="btn btn-success" id="ignore-report-btn" onclick="ignoreReport()">
+                    <i class="fas fa-check me-1"></i>Bỏ qua báo cáo
+                </button>
+                <button type="button" class="btn btn-danger" id="delete-post-btn" onclick="deleteReportedPost()">
+                    <i class="fas fa-trash me-1"></i>Xóa bài viết
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Gradient backgrounds */
+.bg-gradient-danger {
+    background: linear-gradient(45deg, #e74a3b, #be3326);
+}
+
+.bg-gradient-primary {
+    background: linear-gradient(45deg, #4e73df, #224abe);
+}
+
+.bg-gradient-success {
+    background: linear-gradient(45deg, #1cc88a, #169b6b);
+}
+
+.bg-gradient-warning {
+    background: linear-gradient(45deg, #f6c23e, #dda20a);
+}
+
+/* Icon box */
+.icon-box {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+}
+
+/* Card styles */
+.card {
+    border: none;
+    border-radius: 10px;
+    transition: transform 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+}
+
+/* Table styles */
+.table {
+    margin-bottom: 0;
+}
+
+.table th {
+    border-top: none;
+    background-color: #f8f9fc;
+    font-weight: 600;
+    color: #4e73df;
+}
+
+.table td {
+    vertical-align: middle;
+}
+
+/* Button styles */
+.btn {
+    border-radius: 5px;
+    padding: 0.375rem 0.75rem;
+    font-weight: 500;
+}
+
+.btn-primary {
+    background-color: #4e73df;
+    border-color: #4e73df;
+}
+
+.btn-primary:hover {
+    background-color: #224abe;
+    border-color: #224abe;
+}
+
+/* List group styles */
+.list-group-item {
+    border: none;
+    padding: 0.75rem 1.25rem;
+    margin-bottom: 0.25rem;
+    border-radius: 5px;
+    transition: all 0.2s;
+}
+
+.list-group-item:hover {
+    background-color: #f8f9fc;
+}
+
+.list-group-item.active {
+    background-color: #4e73df;
+    border-color: #4e73df;
+}
+
+/* Pagination styles */
+.pagination {
+    margin-bottom: 0;
+}
+
+.page-link {
+    color: #4e73df;
+    border: none;
+    padding: 0.5rem 1rem;
+    margin: 0 0.25rem;
+    border-radius: 5px;
+}
+
+.page-item.active .page-link {
+    background-color: #4e73df;
+    border-color: #4e73df;
+}
+
+/* Animation */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.card {
+    animation: fadeIn 0.5s ease-out;
+}
+
+/* Post content styles */
+#post-content {
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.comment-item {
+    border-bottom: 1px solid #e3e6f0;
+    padding: 10px 0;
+}
+
+.comment-item:last-child {
+    border-bottom: none;
+}
+</style>
+
+<script>
+let currentPage = 1;
+const itemsPerPage = 10;
+let totalPages = 1;
+let currentPostId = null;
+
+document.addEventListener('DOMContentLoaded', function () {
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (!user || user.level !== 'admin') {
+        window.location.href = '/login';
+    }
+    
+    // Load thống kê và danh sách bài viết bị báo cáo
+    loadReportedPostsStatistics();
+    loadReportedPosts();
+});
+
+async function loadReportedPostsStatistics() {
+    try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            console.error('Không tìm thấy token, yêu cầu đăng nhập.');
+            return;
+        }
+
+        const headers = {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        };
+
+        // Giả lập dữ liệu thống kê cho đến khi có API thực tế
+        document.getElementById('total-reports').textContent = '0';
+        document.getElementById('new-reports').textContent = '0';
+        document.getElementById('processed-reports').textContent = '0';
+
+        // TODO: Khi có API thống kê báo cáo, thay thế bằng code sau:
+        /*
+        const response = await fetch('/api/admin/reported-posts/statistics', { headers });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Không thể tải thống kê báo cáo');
+        }
+
+        const data = await response.json();
+        document.getElementById('total-reports').textContent = data.total || 0;
+        document.getElementById('new-reports').textContent = data.new || 0;
+        document.getElementById('processed-reports').textContent = data.processed || 0;
+        */
+
+    } catch (error) {
+        console.error('Lỗi khi tải thống kê báo cáo:', error);
+    }
+}
+
+async function loadReportedPosts(page = 1) {
+    try {
+        const token = localStorage.getItem('token');
+        const searchQuery = document.getElementById('searchInput').value;
+        const statusFilter = document.getElementById('statusFilter').value;
+
+        const headers = {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        };
+
+        const response = await fetch(`/api/admin/reported-posts?page=${page}&search=${searchQuery}&status=${statusFilter}`, { headers });
+
+        if (!response.ok) {
+            throw new Error('Không thể tải danh sách bài viết bị báo cáo');
+        }
+
+        const data = await response.json();
+        renderReportedPosts(data);
+        
+        // Cập nhật thống kê từ dữ liệu trả về
+        document.getElementById('total-reports').textContent = data.length;
+        document.getElementById('new-reports').textContent = data.length;
+        
+        // Giả lập phân trang (cần thay thế khi có API hỗ trợ phân trang)
+        updatePagination(page, data.length);
+    } catch (error) {
+        console.error('Lỗi khi tải danh sách bài viết bị báo cáo:', error);
+        document.getElementById('reportsTableBody').innerHTML = 
+            '<tr><td colspan="7" class="text-center text-danger">Không thể tải danh sách báo cáo. Vui lòng thử lại sau.</td></tr>';
+    }
+}
+
+// Render danh sách bài viết bị báo cáo
+function renderReportedPosts(posts) {
+    const container = document.getElementById('reportsTableBody');
+    
+    if (!posts || posts.length === 0) {
+        container.innerHTML = '<tr><td colspan="7" class="text-center">Không có bài viết nào bị báo cáo</td></tr>';
+        return;
+    }
+    
+    container.innerHTML = posts.map(post => {
+        // Trích xuất nội dung ngắn gọn
+        const shortContent = post.content ? 
+            (post.content.length > 50 ? post.content.substring(0, 50) + '...' : post.content) : 
+            'Không có nội dung';
+        
+        // Format ngày tháng
+        const reportDate = post.report_date ? new Date(post.report_date).toLocaleDateString() : 'N/A';
+        
+        return `
+            <tr>
+                <td>${post.title || 'Không có tiêu đề'}</td>
+                <td>${shortContent}</td>
+                <td>${post.author || 'Ẩn danh'}</td>
+                <td>${reportDate}</td>
+                <td>${post.likes || 0}</td>
+                <td><span class="badge bg-warning">Chưa xử lý</span></td>
+                <td>
+                    <button class="btn btn-sm btn-info me-1" onclick="viewPost('${post._id}')">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button class="btn btn-sm btn-success me-1" onclick="ignoreReportFromTable('${post._id}')">
+                        <i class="fas fa-check"></i>
+                    </button>
+                    <button class="btn btn-sm btn-danger" onclick="deleteReportedPostFromTable('${post._id}')">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+// Cập nhật phân trang
+function updatePagination(currentPage, total) {
+    const pagination = document.getElementById('pagination');
+    const totalPages = Math.max(1, Math.ceil(total / itemsPerPage));
+    
+    pagination.innerHTML = '';
+
+    if (totalPages > 1) {
+        pagination.innerHTML = `
+            <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+                <a class="page-link" href="#" onclick="loadReportedPosts(${currentPage - 1})">
+                    <i class="fas fa-chevron-left"></i>
+                </a>
+            </li>
+            ${Array.from({ length: totalPages }, (_, i) => `
+                <li class="page-item ${i + 1 === currentPage ? 'active' : ''}">
+                    <a class="page-link" href="#" onclick="loadReportedPosts(${i + 1})">${i + 1}</a>
+                </li>
+            `).join('')}
+            <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+                <a class="page-link" href="#" onclick="loadReportedPosts(${currentPage + 1})">
+                    <i class="fas fa-chevron-right"></i>
+                </a>
+            </li>
+        `;
+    }
+}
+
+// Xem chi tiết bài viết bị báo cáo
+async function viewPost(postId) {
+    try {
+        currentPostId = postId;
+        const token = localStorage.getItem('token');
+        
+        const response = await fetch(`/api/admin/forum/posts/${postId}`, {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Không thể tải chi tiết bài viết');
+        }
+
+        const post = await response.json();
+        
+        // Điền thông tin vào modal
+        document.getElementById('post-title').textContent = post.title || 'Không có tiêu đề';
+        document.getElementById('post-author').textContent = post.author || 'Ẩn danh';
+        document.getElementById('post-date').textContent = post.created_at ? new Date(post.created_at).toLocaleDateString() : 'N/A';
+        document.getElementById('post-likes').textContent = post.likes || 0;
+        document.getElementById('post-content').textContent = post.content || 'Không có nội dung';
+        
+        // Hiển thị ảnh nếu có
+        if (post.media_url) {
+            const mediaContainer = document.createElement('div');
+            mediaContainer.className = 'mt-3';
+            mediaContainer.innerHTML = `<img src="${post.media_url}" class="img-fluid rounded" alt="Hình ảnh bài viết">`;
+            document.getElementById('post-content').after(mediaContainer);
+        }
+        
+        // Hiển thị bình luận
+        const commentsContainer = document.getElementById('post-comments');
+        commentsContainer.innerHTML = '';
+        
+        if (post.comments && post.comments.length > 0) {
+            document.getElementById('comments-count').textContent = post.comments.length;
+            
+            commentsContainer.innerHTML = post.comments.map(comment => `
+                <div class="comment-item">
+                    <div class="d-flex align-items-center mb-1">
+                        <strong>${comment.author || 'Ẩn danh'}</strong>
+                        <small class="text-muted ms-2">${comment.created_at ? new Date(comment.created_at).toLocaleString() : 'N/A'}</small>
+                    </div>
+                    <p class="mb-0">${comment.content || ''}</p>
+                </div>
+            `).join('');
+        } else {
+            document.getElementById('comments-count').textContent = '0';
+            commentsContainer.innerHTML = '<p class="text-center">Chưa có bình luận nào.</p>';
+        }
+
+        // Hiển thị modal
+        const modal = new bootstrap.Modal(document.getElementById('viewPostModal'));
+        modal.show();
+
+    } catch (error) {
+        console.error('Lỗi khi tải chi tiết bài viết:', error);
+        alert('Không thể tải chi tiết bài viết. Vui lòng thử lại sau.');
+    }
+}
+
+// Bỏ qua báo cáo (từ bảng)
+async function ignoreReportFromTable(postId) {
+    if (confirm('Bạn có chắc chắn muốn bỏ qua báo cáo này?')) {
+        try {
+            const token = localStorage.getItem('token');
+            
+            const response = await fetch(`/api/admin/ignore-report/${postId}`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Không thể bỏ qua báo cáo');
+            }
+            
+            alert('Đã bỏ qua báo cáo bài viết thành công!');
+            
+            // Tải lại danh sách và thống kê
+            loadReportedPosts(currentPage);
+            loadReportedPostsStatistics();
+        } catch (error) {
+            console.error('Lỗi khi bỏ qua báo cáo:', error);
+            alert('Không thể bỏ qua báo cáo. Vui lòng thử lại sau.');
+        }
+    }
+}
+
+// Xóa bài viết bị báo cáo (từ bảng)
+async function deleteReportedPostFromTable(postId) {
+    if (confirm('Bạn có chắc chắn muốn xóa bài viết này?')) {
+        await processReport(postId, 'delete');
+    }
+}
+
+// Bỏ qua báo cáo (từ modal)
+async function ignoreReport() {
+    if (confirm('Bạn có chắc chắn muốn bỏ qua báo cáo này?')) {
+        await processReport(currentPostId, 'ignore');
+        
+        // Đóng modal
+        const modal = bootstrap.Modal.getInstance(document.getElementById('viewPostModal'));
+        modal.hide();
+    }
+}
+
+// Xóa bài viết bị báo cáo (từ modal)
+async function deleteReportedPost() {
+    if (confirm('Bạn có chắc chắn muốn xóa bài viết này?')) {
+        await processReport(currentPostId, 'delete');
+        
+        // Đóng modal
+        const modal = bootstrap.Modal.getInstance(document.getElementById('viewPostModal'));
+        modal.hide();
+    }
+}
+
+// Xử lý báo cáo (bỏ qua hoặc xóa)
+async function processReport(postId, action) {
+    try {
+        const token = localStorage.getItem('token');
+        
+        if (action === 'delete') {
+            // Xóa bài viết
+            const response = await fetch(`/api/admin/forum/posts/${postId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Không thể xóa bài viết');
+            }
+            
+            alert('Đã xóa bài viết thành công!');
+        } else {
+            // Bỏ qua báo cáo
+            const response = await fetch(`/api/admin/ignore-report/${postId}`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Không thể bỏ qua báo cáo');
+            }
+            
+            alert('Đã bỏ qua báo cáo bài viết thành công!');
+        }
+        
+        // Tải lại danh sách và thống kê
+        loadReportedPosts(currentPage);
+        loadReportedPostsStatistics();
+        
+    } catch (error) {
+        console.error(`Lỗi khi ${action === 'delete' ? 'xóa' : 'bỏ qua'} báo cáo:`, error);
+        alert(`Không thể ${action === 'delete' ? 'xóa bài viết' : 'bỏ qua báo cáo'}. Vui lòng thử lại sau.`);
+    }
+}
+
+// Lọc và tìm kiếm
+document.getElementById('searchInput').addEventListener('input', debounce(function() {
+    currentPage = 1;
+    loadReportedPosts(currentPage);
+}, 500));
+
+document.getElementById('statusFilter').addEventListener('change', function() {
+    currentPage = 1;
+    loadReportedPosts(currentPage);
+});
+
+// Hàm debounce để tránh gọi API quá nhiều
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+</script>
+{% endblock %}

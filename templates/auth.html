@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+
+{% block title %}Đăng nhập - Văn học thời đại số{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-6 col-md-8">
+            <div class="card shadow-lg">
+                <div class="card-header bg-dark text-white text-center py-3">
+                    <h2 class="mb-0"><i class="fas fa-sign-in-alt me-2"></i>Đăng nhập</h2>
+                </div>
+                <div class="card-body">
+                    <form id="loginForm" onsubmit="return handleLogin(event)">
+                        <div class="mb-3">
+                            <label for="username" class="form-label">Tên đăng nhập</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-user"></i></span>
+                                <input type="text" class="form-control" id="username" required>
+                            </div>
+                        </div>
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-sign-in-alt me-2"></i>Đăng nhập
+                            </button>
+                            <a href="/register" class="btn btn-secondary">
+                                <i class="fas fa-user-plus me-2"></i>Chưa có tài khoản? Đăng ký
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function togglePasswordVisibility(inputId) {
+    const input = document.getElementById(inputId);
+    const button = input.nextElementSibling;
+    const icon = button.querySelector('i');
+    
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+    } else {
+        input.type = 'password';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+    }
+}
+
+async function handleLogin(event) {
+    event.preventDefault();
+    
+    const username = document.getElementById('username').value;
+    
+    try {
+        const response = await fetch('/auth/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                username
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            // Lưu thông tin người dùng
+            localStorage.setItem('username', data.user.username);
+            localStorage.setItem('level', data.user.level);
+            
+            // Chuyển hướng dựa trên cấp độ
+            window.location.href = data.user.level === 'admin' ? '/admin' : '/home';
+        } else {
+            showNotification(data.message || 'Đăng nhập thất bại', 'error');
+        }
+    } catch (error) {
+        console.error('Lỗi khi đăng nhập:', error);
+        showNotification('Có lỗi xảy ra khi đăng nhập', 'error');
+    }
+    
+    return false;
+}
+
+function showNotification(message, type = 'info') {
+    const notificationArea = document.getElementById('notification-area') || createNotificationArea();
+    
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type === 'error' ? 'danger' : type} notification`;
+    
+    let icon = 'info-circle';
+    if (type === 'success') icon = 'check-circle';
+    if (type === 'warning') icon = 'exclamation-triangle';
+    if (type === 'error') icon = 'times-circle';
+    
+    notification.innerHTML = `
+        <i class="fas fa-${icon} me-2"></i>
+        ${message}
+    `;
+    
+    notificationArea.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.classList.add('show');
+        setTimeout(() => {
+            notification.classList.remove('show');
+            setTimeout(() => {
+                notification.remove();
+            }, 300);
+        }, 3000);
+    }, 10);
+}
+
+function createNotificationArea() {
+    const notificationArea = document.createElement('div');
+    notificationArea.id = 'notification-area';
+    notificationArea.className = 'notification-area';
+    document.body.appendChild(notificationArea);
+    return notificationArea;
+}
+</script>
+
+<style>
+.notification-area {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 9999;
+    max-width: 300px;
+}
+
+.notification {
+    margin-bottom: 10px;
+    transform: translateX(100%);
+    opacity: 0;
+    transition: all 0.3s ease;
+}
+
+.notification.show {
+    transform: translateX(0);
+    opacity: 1;
+}
+
+.card {
+    border: none;
+    border-radius: 10px;
+}
+
+.card-header {
+    border-radius: 10px 10px 0 0 !important;
+}
+
+.form-control:focus {
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.btn-outline-secondary:hover {
+    background-color: #6c757d;
+    color: white;
+}
+</style>
+{% endblock %}

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý Đề Thi</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f4f4f4; }
+        button { margin-right: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h2>Quản lý Đề Thi</h2>
+    
+    <h3>Thêm Đề Thi</h3>
+    <input type="text" id="title" placeholder="Tiêu đề">
+    <input type="text" id="question" placeholder="Câu hỏi">
+    <input type="text" id="answer" placeholder="Đáp án">
+    <button onclick="addExam()">Thêm</button>
+    
+    <h3>Danh sách Đề Thi</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Tiêu đề</th>
+                <th>Câu hỏi</th>
+                <th>Đáp án</th>
+                <th>Hành động</th>
+            </tr>
+        </thead>
+        <tbody id="examTableBody"></tbody>
+    </table>
+
+    <script>
+        const apiUrl = '/exam';
+
+        function fetchExams() {
+            fetch(apiUrl)
+                .then(response => response.json())
+                .then(data => {
+                    const tableBody = document.getElementById("examTableBody");
+                    tableBody.innerHTML = "";
+                    data.forEach(exam => {
+                        const row = `<tr>
+                            <td>${exam.title}</td>
+                            <td>${exam.question}</td>
+                            <td>${exam.answer}</td>
+                            <td>
+                                <button onclick="editExam('${exam._id}')">Sửa</button>
+                                <button onclick="deleteExam('${exam._id}')">Xóa</button>
+                            </td>
+                        </tr>`;
+                        tableBody.innerHTML += row;
+                    });
+                });
+        }
+
+        function addExam() {
+            const title = document.getElementById("title").value;
+            const question = document.getElementById("question").value;
+            const answer = document.getElementById("answer").value;
+            
+            fetch(apiUrl, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ title, question, answer })
+            }).then(() => {
+                fetchExams();
+            });
+        }
+
+        function deleteExam(id) {
+            fetch(`${apiUrl}/${id}`, { method: "DELETE" })
+                .then(() => fetchExams());
+        }
+
+        function editExam(id) {
+            const newTitle = prompt("Nhập tiêu đề mới:");
+            const newQuestion = prompt("Nhập câu hỏi mới:");
+            const newAnswer = prompt("Nhập đáp án mới:");
+            
+            if (newTitle && newQuestion && newAnswer) {
+                fetch(`${apiUrl}/${id}`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ title: newTitle, question: newQuestion, answer: newAnswer })
+                }).then(() => fetchExams());
+            }
+        }
+
+        fetchExams();
+    </script>
+</body>
+</html>

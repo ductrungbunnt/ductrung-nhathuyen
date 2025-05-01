@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nộp bài thi Online</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            text-align: center;
+        }
+        .container {
+            width: 80%;
+            margin: 50px auto;
+            background: white;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+        h1 {
+            color: #333;
+        }
+        .exam-list {
+            margin-bottom: 20px;
+        }
+        .exam-list select {
+            padding: 10px;
+            font-size: 16px;
+        }
+        .upload-form {
+            margin-top: 20px;
+        }
+        .upload-form input {
+            margin: 10px 0;
+            padding: 10px;
+        }
+        .btn-submit {
+            padding: 12px 20px;
+            font-size: 16px;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+            background-color: #007bff;
+            color: white;
+            transition: 0.3s;
+        }
+        .btn-submit:hover {
+            background-color: #0056b3;
+        }
+        .result {
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        .feedback {
+            margin-top: 10px;
+            font-size: 16px;
+            text-align: left;
+            background-color: #f9f9f9;
+            padding: 10px;
+            border-radius: 5px;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    {% include "base.html" %}
+    <div class="container">
+        <h1>Nộp bài thi Online</h1>
+
+        <!-- Chọn đề thi -->
+        <div class="exam-list">
+            <label for="exam">Chọn đề thi:</label>
+            <select id="exam">
+                <!-- Danh sách đề thi sẽ được load bằng JavaScript -->
+            </select>
+        </div>
+
+        <!-- Form tải ảnh bài làm -->
+        <div class="upload-form">
+            <input type="file" id="examImage" accept="image/*">
+            <button class="btn-submit" onclick="submitExam()">📤 Nộp bài</button>
+        </div>
+
+        <!-- Kết quả -->
+        <div class="result" id="result"></div>
+        <div class="feedback" id="feedback"></div>
+    </div>
+
+    <script>
+        // API URL của backend
+        const API_BASE_URL = "/exam";
+
+        // Tải danh sách đề thi từ API
+        async function loadExams() {
+            try {
+                let response = await fetch(API_BASE_URL);
+                let exams = await response.json();
+                
+                let examSelect = document.getElementById("exam");
+                examSelect.innerHTML = "";
+                
+                exams.forEach(exam => {
+                    let option = document.createElement("option");
+                    option.value = exam._id;
+                    option.textContent = exam.title;
+                    examSelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error("Lỗi khi tải đề thi:", error);
+            }
+        }
+
+        // Nộp bài làm lên server
+        async function submitExam() {
+            let examId = document.getElementById("exam").value;
+            let fileInput = document.getElementById("examImage");
+            let resultDiv = document.getElementById("result");
+            let feedbackDiv = document.getElementById("feedback");
+
+            if (!fileInput.files.length) {
+                alert("Vui lòng chọn ảnh bài làm!");
+                return;
+            }
+
+            let file = fileInput.files[0];
+            let reader = new FileReader();
+
+            reader.onloadend = async function () {
+                let base64Image = reader.result.split(",")[1]; // Lấy dữ liệu base64
+                
+                let data = {
+                    exam_id: examId,
+                    image: base64Image
+                };
+
+                try {
+                    let response = await fetch(API_BASE_URL + "/submit", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(data)
+                    });
+
+                    let result = await response.json();
+                    resultDiv.innerHTML = `✅ Điểm số: ${result.score}`;
+                    feedbackDiv.innerHTML = `📝 Nhận xét chi tiết:<br>${result.feedback}`;
+                } catch (error) {
+                    console.error("Lỗi khi nộp bài:", error);
+                    resultDiv.innerHTML = "❌ Lỗi khi chấm bài!";
+                    feedbackDiv.innerHTML = "";
+                }
+            };
+
+            reader.readAsDataURL(file);
+        }
+
+        // Gọi hàm tải danh sách đề thi khi trang được tải
+        window.onload = loadExams;
+    </script>
+
+</body>
+</html>

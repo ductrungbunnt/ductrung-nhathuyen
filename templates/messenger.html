@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+
+    <title>Chat Box</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f1f1f1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .chat-container {
+    width: 600px;
+    background: rgba(255, 255, 255, 0.8);
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-top: 50px; /* Đẩy xuống 50px */
+    margin-left:350px;
+}
+        .chat-header {
+            background: blue;
+            color: white;
+            padding: 10px;
+            font-size: 18px;
+            text-align: center;
+        }
+        .chat-messages {
+            height: 300px;
+            overflow-y: auto;
+            padding: 10px;
+            background: #f9f9f9;
+        }
+        body {
+    background: url('http://localhost:8000/uploads/z6449100016857_31871255e03326c14095c3b31c4a546f.jpg') no-repeat center top fixed;
+    background-size: cover;
+}
+        .message {
+            padding: 8px;
+            background: white;
+            border-radius: 5px;
+            margin-bottom: 5px;
+            box-shadow: 0 0 2px rgba(0, 0, 0, 0.1);
+        }
+        .message strong {
+            color: #333;
+        }
+        .chat-input {
+            display: flex;
+            flex-direction: column;
+            padding: 10px;
+            background: white;
+            border-top: 1px solid #ddd;
+        }
+        .input-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        .input-group input[type="text"] {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .input-group button {
+            background: black;
+            color: white;
+            border: none;
+            padding: 8px;
+            margin-left: 5px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        .file-input {
+            display: flex;
+            justify-content: space-between;
+        }
+        .file-input label {
+            cursor: pointer;
+            font-size: 14px;
+            padding: 5px;
+            border-radius: 5px;
+            background: #ddd;
+            margin-right: 5px;
+        }
+        .hidden-input {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">Chat Box</div>
+        <div class="chat-messages" id="messages-container"></div>
+        <div class="chat-input">
+            <div class="input-group">
+                <input type="text" id="message" placeholder="Nhập tin nhắn">
+                <button onclick="sendMessage()">Gửi</button>
+            </div>
+            <div class="file-input">
+                <label for="image-input">📷 Ảnh</label>
+                <input type="file" id="image-input" class="hidden-input" accept="image/*">
+                <label for="word-input">📄 Word</label>
+                <input type="file" id="word-input" class="hidden-input" accept=".doc,.docx">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const room = "general";
+        let username = localStorage.getItem("username") || "Guest";
+
+        async function fetchMessages() {
+            try {
+                const response = await fetch(`/messages?room=${room}`);
+                const messages = await response.json();
+                displayMessages(messages);
+            } catch (error) {
+                console.error("Lỗi khi tải tin nhắn:", error);
+            }
+        }
+        function displayMessages(messages) {
+    const messagesContainer = document.getElementById("messages-container");
+    messagesContainer.innerHTML = "";
+
+    messages.forEach(msg => {
+        const div = document.createElement("div");
+        div.className = "message";
+        div.innerHTML = `<strong>${msg.user}</strong>: ${msg.message}`;
+
+        // Kiểm tra và hiển thị ảnh
+        if (msg.image_url) {
+            const imageUrl = msg.image_url.startsWith("http") ? msg.image_url : `http://localhost:8000${msg.image_url}`;
+            div.innerHTML += ` <br><img src="${imageUrl}"  width="100%" style="border-radius:5px;">`;
+        }
+
+        // Kiểm tra và hiển thị file Word
+        if (msg.file_url) {
+            const fileUrl = msg.file_url.startsWith("http") ? msg.file_url : `http://localhost:8000${msg.file_url}`;
+            div.innerHTML += `<br><a href="${fileUrl}" download style="color:blue;">📄 Tải file Word</a>`;
+        }
+
+        // Thêm nút xóa tin nhắn với icon thùng rác
+        const deleteButton = document.createElement("button");
+        deleteButton.innerHTML = `<i class="fas fa-trash"></i>`; // Icon FontAwesome
+        deleteButton.style.marginLeft = "10px";
+        deleteButton.style.background = "transparent";
+        deleteButton.style.border = "none";
+        deleteButton.style.cursor = "pointer";
+        deleteButton.style.color = "red";
+        deleteButton.onclick = () => deleteMessage(msg.message_id);
+
+        div.appendChild(deleteButton);
+        messagesContainer.appendChild(div);
+    });
+}
+
+async function deleteMessage(messageId) {
+    if (!messageId) {
+        alert("Lỗi: ID tin nhắn không hợp lệ!");
+        console.error("Invalid messageId:", messageId);
+        return;
+    }
+
+    if (!confirm("Bạn có chắc chắn muốn xóa tin nhắn này?")) return;
+
+    try {
+        const response = await fetch(`/messages/${messageId}`, {
+            method: "DELETE"
+        });
+
+        if (response.ok) {
+            alert("Tin nhắn đã bị xóa!");
+            fetchMessages(); // Làm mới danh sách tin nhắn
+        } else {
+            const errorData = await response.json();
+            alert("Lỗi khi xóa tin nhắn: " + (errorData.error || "Không thể xóa!"));
+        }
+    } catch (error) {
+        console.error("Lỗi khi xóa tin nhắn:", error);
+        alert("Lỗi kết nối đến server!");
+    }
+}
+
+document.getElementById("image-input").addEventListener("change", function() {
+    if (this.files.length > 0) {
+        let currentMessage = document.getElementById("message").value;
+        document.getElementById("message").value = currentMessage 
+            ? `${currentMessage}, ${this.files[0].name}` 
+            : this.files[0].name;
+    }
+});
+
+document.getElementById("word-input").addEventListener("change", function() {
+    if (this.files.length > 0) {
+        let currentMessage = document.getElementById("message").value;
+        document.getElementById("message").value = currentMessage 
+            ? `${currentMessage}, ${this.files[0].name}` 
+            : this.files[0].name;
+    }
+});
+// Hàm xử lý lỗi nếu ảnh bị lỗi không load được
+function handleImageError(img, url) {
+    console.warn(`Không thể tải ảnh từ: ${url}`);
+    img.src = "https://via.placeholder.com/150?text=No+Image"; // Hiển thị ảnh mặc định
+}
+
+        async function sendMessage() {
+            const message = document.getElementById("message").value;
+            const imageFile = document.getElementById("image-input").files[0];
+            const wordFile = document.getElementById("word-input").files[0];
+
+            let formData = new FormData();
+            formData.append("user", username);
+            formData.append("room", room);
+            if (message) formData.append("message", message);
+            if (imageFile) formData.append("image", imageFile);
+            if (wordFile) formData.append("file", wordFile);
+
+            // Get api_censor_profanity_with_gemini from server with text message
+            try {
+                const censorResponse = await fetch(`/api_censor_profanity_with_gemini?text=${encodeURIComponent(message)}`);
+                if (censorResponse.ok) {
+                    const censorData = await censorResponse.json();
+                    if (censorData.result) {
+                        formData.set("message", censorData.result); // Update the message with the censored text
+                    }
+                } else {
+                    console.warn("Lỗi khi kiểm duyệt nội dung:", await censorResponse.text());
+                }
+            } catch (error) {
+                console.error("Lỗi khi gọi API kiểm duyệt:", error);
+            }
+
+
+            try {
+                const response = await fetch("/messages", {
+                    method: "POST",
+                    body: formData
+                });
+
+                if (response.ok) {
+                    fetchMessages();
+                    document.getElementById("message").value = "";
+                    document.getElementById("image-input").value = "";
+                    document.getElementById("word-input").value = "";
+                }
+            } catch (error) {
+                console.error("Lỗi khi gửi tin nhắn:", error);
+            }
+        }
+
+        setInterval(fetchMessages, 3000);
+        window.onload = fetchMessages;
+    </script>
+</body>
+</html>

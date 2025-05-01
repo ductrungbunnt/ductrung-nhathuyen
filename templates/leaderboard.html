@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+{% block title %}Bảng Xếp Hạng - Văn học thời đại số{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h2 class="mb-4">Bảng Xếp Hạng</h2>
+    
+    <!-- Chọn loại game -->
+    <div class="mb-4">
+        <select class="form-select" id="gameType" onchange="loadLeaderboard()">
+            <option value="word_search">Tìm từ</option>
+            <option value="quiz">Câu đố văn học</option>
+            <option value="memory">Trò chơi trí nhớ</option>
+        </select>
+    </div>
+    
+    <!-- Bảng xếp hạng -->
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Hạng</th>
+                            <th>Người chơi</th>
+                            <th>Điểm số</th>
+                            <th>Ngày chơi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leaderboardBody">
+                        <!-- Dữ liệu sẽ được load động -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Thông tin người chơi hiện tại -->
+    <div class="card mt-4" id="currentPlayerCard" style="display: none;">
+        <div class="card-body">
+            <h5 class="card-title">Thông tin của bạn</h5>
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>Điểm cao nhất:</strong> <span id="bestScore">0</span></p>
+                </div>
+                <div class="col-md-6">
+                    <p><strong>Thứ hạng:</strong> <span id="playerRank">0</span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.table th {
+    background-color: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+}
+
+.table td {
+    vertical-align: middle;
+}
+
+#currentPlayerCard {
+    background-color: #f8f9fa;
+    border-left: 4px solid #007bff;
+}
+
+.rank-1 {
+    color: #ffd700;
+    font-weight: bold;
+}
+
+.rank-2 {
+    color: #c0c0c0;
+    font-weight: bold;
+}
+
+.rank-3 {
+    color: #cd7f32;
+    font-weight: bold;
+}
+</style>
+
+<script>
+let currentUsername = localStorage.getItem("username");
+
+async function loadLeaderboard() {
+    const gameType = document.getElementById('gameType').value;
+    try {
+        // Load bảng xếp hạng
+        const response = await fetch(`/api/minigame/scores/${gameType}`);
+        const data = await response.json();
+        
+        if (data.success) {
+            const tbody = document.getElementById('leaderboardBody');
+            tbody.innerHTML = '';
+            
+            data.scores.forEach((score, index) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="${index < 3 ? `rank-${index + 1}` : ''}">${index + 1}</td>
+                    <td>${score.username}</td>
+                    <td>${score.score}</td>
+                    <td>${new Date(score.created_at).toLocaleDateString('vi-VN')}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+            
+            // Load thông tin người chơi hiện tại
+            if (currentUsername) {
+                loadCurrentPlayerInfo(gameType);
+            }
+        }
+    } catch (error) {
+        console.error('Lỗi khi tải bảng xếp hạng:', error);
+        alert('Không thể tải bảng xếp hạng. Vui lòng thử lại sau.');
+    }
+}
+
+async function loadCurrentPlayerInfo(gameType) {
+    try {
+        const response = await fetch(`/api/minigame/scores/${gameType}/${currentUsername}`);
+        const data = await response.json();
+        
+        if (data.success) {
+            document.getElementById('currentPlayerCard').style.display = 'block';
+            document.getElementById('bestScore').textContent = data.best_score ? data.best_score.score : '0';
+            document.getElementById('playerRank').textContent = data.rank;
+        }
+    } catch (error) {
+        console.error('Lỗi khi tải thông tin người chơi:', error);
+    }
+}
+
+// Load bảng xếp hạng khi trang được tải
+document.addEventListener('DOMContentLoaded', loadLeaderboard);
+</script>
+{% endblock %} 

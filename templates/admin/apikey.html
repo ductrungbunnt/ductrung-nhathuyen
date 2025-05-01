@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Quản lý Bài Viết Diễn Đàn</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+      }
+      th,
+      td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: left;
+      }
+      th {
+        background-color: #f4f4f4;
+      }
+      .btn {
+        padding: 5px 10px;
+        cursor: pointer;
+        border: none;
+        color: white;
+      }
+      .btn-delete {
+        background-color: red;
+      }
+      .btn-edit {
+        background-color: orange;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Quản lý Bài Viết Diễn Đàn</h1>
+    
+    <!-- Trường nhập API Key -->
+    <div>
+      <input type="text" id="api-key" placeholder="Nhập API Key" />
+      <button onclick="submitApiKey()">Nhập Key</button>
+      <button onclick="deleteApiKey()">Xóa Key</button>
+      <button onclick="useKey()">Sử dụng Key</button>
+    </div>
+    <p></p>
+    <button onclick="loadKeys()">Tải các apikey</button>
+    <table>
+      <thead>
+        <tr>
+          <th>Api Key</th>
+          <th>Sử dụng</th>
+        </tr>
+      </thead>
+      <tbody id="post-list"></tbody>
+    </table>
+
+    <script>
+      async function loadKeys() {
+    // Gọi API để lấy danh sách các API Key
+    const response = await fetch("/get-key", {
+        method: "GET",
+    });
+
+    // Chuyển đổi phản hồi thành JSON
+    const result = await response.json(); // Đọc phản hồi
+
+    // Kiểm tra kết quả thành công
+    if (result.success) {
+        // Lấy phần tử tbody của bảng để cập nhật
+        const tableBody = document.getElementById("post-list");
+        tableBody.innerHTML = ""; // Xóa nội dung cũ
+
+        // Hiển thị dữ liệu trong bảng
+        result.apiKeys.forEach((post) => { // Sử dụng apiKeys từ phản hồi
+            tableBody.innerHTML += `
+                <tr>
+                    <td>${post.apiKey}</td>
+                    <td>${post.trangthai}</td>
+                </tr>
+            `;
+        });
+    } else {
+        // Nếu có lỗi, hiển thị thông điệp
+        alert(`❌ ${result.message}`); // Hiển thị thông điệp trên giao diện người dùng
+    }
+}
+
+      async function submitApiKey() {
+        const apiKey = document.getElementById("api-key").value;
+        if (!apiKey) {
+          alert("Vui lòng nhập API Key.");
+          return;
+        }
+
+        try {
+          const response = await fetch("/add-key", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ apiKey }),
+          });
+
+          if (response.ok) {
+            alert("✅ API Key đã được nhập thành công!");
+            document.getElementById("api-key").value = ""; // Xóa trường nhập
+          } else {
+            const data = await response.json();
+            alert("❌ Nhập không thành công: " + (data.message || "Lỗi không xác định"));
+          }
+        } catch (error) {
+          console.error("Lỗi khi gọi API nhập key:", error);
+          alert("❌ Có lỗi xảy ra khi nhập API Key.");
+        }
+      }
+
+      async function useKey() {
+        const apiKey = document.getElementById("api-key").value;
+        if (!apiKey) {
+          alert("Vui lòng nhập API Key.");
+          return;
+        }
+
+        try {
+          const response = await fetch("/choose-key", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ apiKey }),
+          });
+
+          if (response.ok) {
+            alert("✅ API Key đã được chọn thành công!");
+            document.getElementById("api-key").value = ""; // Xóa trường nhập
+          } else {
+            const data = await response.json();
+            alert("❌ Chọn không thành công: " + (data.message || "Lỗi không xác định"));
+          }
+        } catch (error) {
+          console.error("Lỗi khi gọi API nhập key:", error);
+          alert("❌ Có lỗi xảy ra khi nhập API Key.");
+        }
+      }
+
+      async function deleteApiKey(id) {
+        const confirmDelete = confirm("Bạn có chắc muốn xóa bài viết này?");
+        if (!confirmDelete) return;
+
+        try {
+          const response = await fetch(`/forum/posts/${id}`, {
+            method: "DELETE",
+          });
+
+          if (response.ok) {
+            alert("🗑️ Bài viết đã được xoá thành công!");
+            loadPosts(); // Load lại danh sách bài viết
+          } else {
+            const data = await response.json();
+            alert("❌ Xóa không thành công: " + (data.message || "Lỗi không xác định"));
+          }
+        } catch (error) {
+          console.error("Lỗi khi gọi API xoá:", error);
+          alert("❌ Có lỗi xảy ra khi xoá bài viết.");
+        }
+      }
+    </script>
+  </
+</body>
+</html>

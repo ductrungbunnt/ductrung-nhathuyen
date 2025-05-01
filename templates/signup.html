@@ -1,0 +1,236 @@
+{% extends "base.html" %}
+
+{% block title %}Đăng ký - Văn học thời đại số{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center align-items-center min-vh-100">
+        <div class="col-md-6 col-lg-5">
+            <div class="card shadow-lg border-0">
+                <div class="card-body p-5">
+                    <div class="text-center mb-4">
+                        <h4 class="fw-bold text-primary">Văn học thời đại số</h4>
+                        <p class="text-muted">Tạo tài khoản mới</p>
+                    </div>
+                    
+                    <form id="signupForm" onsubmit="return handleSignup(event)">
+                        <div class="mb-3">
+                            <label class="form-label">Họ tên</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light">
+                                    <i class="fas fa-user"></i>
+                                </span>
+                                <input type="text" class="form-control" id="fullname" required>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Tên đăng nhập</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light">
+                                    <i class="fas fa-user-circle"></i>
+                                </span>
+                                <input type="text" class="form-control" id="username" required>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Email</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light">
+                                    <i class="fas fa-envelope"></i>
+                                </span>
+                                <input type="email" class="form-control" id="email" required>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Mật khẩu</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light">
+                                    <i class="fas fa-lock"></i>
+                                </span>
+                                <input type="password" class="form-control" id="password" required>
+                                <button class="btn btn-outline-secondary" type="button" onclick="togglePassword()">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="form-label">Xác nhận mật khẩu</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light">
+                                    <i class="fas fa-lock"></i>
+                                </span>
+                                <input type="password" class="form-control" id="confirmPassword" required>
+                                <button class="btn btn-outline-secondary" type="button" onclick="toggleConfirmPassword()">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-user-plus me-2"></i>Đăng ký
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <div class="text-center mt-4">
+                        <p class="mb-0">Đã có tài khoản? 
+                            <a href="/login" class="text-primary text-decoration-none">Đăng nhập</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+body {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.card {
+    border-radius: 15px;
+    backdrop-filter: blur(10px);
+    background: rgba(255, 255, 255, 0.95);
+}
+
+.input-group-text {
+    border: none;
+}
+
+.form-control {
+    border: none;
+    padding: 0.75rem;
+}
+
+.form-control:focus {
+    box-shadow: none;
+    border-color: #4e73df;
+}
+
+.btn-primary {
+    background: linear-gradient(45deg, #4e73df, #224abe);
+    border: none;
+    padding: 0.75rem;
+    font-weight: 500;
+    transition: all 0.3s;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(78, 115, 223, 0.3);
+}
+
+.btn-outline-secondary {
+    border: none;
+    color: #6c757d;
+}
+
+.btn-outline-secondary:hover {
+    background-color: #f8f9fa;
+    color: #4e73df;
+}
+
+.text-primary {
+    color: #4e73df !important;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.card {
+    animation: fadeIn 0.5s ease-out;
+}
+</style>
+
+<script>
+function togglePassword() {
+    const passwordInput = document.getElementById('password');
+    const toggleButton = document.querySelector('.btn-outline-secondary i');
+    
+    if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        toggleButton.classList.remove('fa-eye');
+        toggleButton.classList.add('fa-eye-slash');
+    } else {
+        passwordInput.type = 'password';
+        toggleButton.classList.remove('fa-eye-slash');
+        toggleButton.classList.add('fa-eye');
+    }
+}
+
+function toggleConfirmPassword() {
+    const passwordInput = document.getElementById('confirmPassword');
+    const toggleButton = document.querySelectorAll('.btn-outline-secondary i')[1];
+    
+    if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        toggleButton.classList.remove('fa-eye');
+        toggleButton.classList.add('fa-eye-slash');
+    } else {
+        passwordInput.type = 'password';
+        toggleButton.classList.remove('fa-eye-slash');
+        toggleButton.classList.add('fa-eye');
+    }
+}
+
+async function handleSignup(event) {
+    event.preventDefault();
+    
+    const fullname = document.getElementById('fullname').value;
+    const username = document.getElementById('username').value;
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+    
+    // Kiểm tra mật khẩu xác nhận
+    if (password !== confirmPassword) {
+        alert('Mật khẩu xác nhận không khớp');
+        return false;
+    }
+    
+    try {
+        const response = await fetch('/auth/register', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                fullname,
+                username,
+                email,
+                password
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            // Lưu thông tin người dùng vào localStorage
+            localStorage.setItem('username', data.user.username);
+            localStorage.setItem('level', data.user.level);
+            
+            // Thông báo thành công và chuyển hướng tới trang đăng nhập
+            alert('Đăng ký thành công! Vui lòng đăng nhập để tiếp tục.');
+            window.location.href = '/login';  // Chuyển hướng đến trang đăng nhập
+        } else {
+            // Thông báo lỗi khi đăng ký thất bại
+            alert(data.message || 'Đăng ký thất bại');
+        }
+    } catch (error) {
+        console.error('Lỗi khi đăng ký:', error);
+        alert('Có lỗi xảy ra khi đăng ký');
+    }
+    
+    return false;
+}
+
+</script>
+{% endblock %}
